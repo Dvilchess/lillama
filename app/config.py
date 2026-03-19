@@ -6,7 +6,7 @@ class Config:
     ENV: str = os.getenv("ENV", "dev")
 
     # Model
-    MODEL_ID: str = os.getenv("MODEL_ID", "./models")
+    MODEL_ID: str = os.getenv("MODEL_ID", "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
     MODEL_DIR: str = os.getenv("MODEL_DIR", "./models")
     FINETUNED_MODEL_DIR: str = os.getenv("FINETUNED_MODEL_DIR", "./models/finetuned")
 
