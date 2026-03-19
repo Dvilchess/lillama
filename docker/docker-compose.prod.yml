@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  tinyllama-prod:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.prod
+    ports:
+      - "7860:7860"
+    volumes:
+      - ../models:/app/models
+    env_file:
+      - ../.env.prod
+    environment:
+      - ENV=prod
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
