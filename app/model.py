@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, BitsAndBytesConfig
 from app.config import config
 import logging
 
@@ -16,17 +16,35 @@ class LLMModel:
         logger.info(f"Loading model from: {model_path} | ENV: {config.ENV}")
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_path,
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-            device_map="auto",
-        )
+
+        if torch.cuda.is_available():
+            logger.info("GPU detectada — cargando en 4-bit")
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_use_double_quant=True,
+            )
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_path,
+                quantization_config=bnb_config,
+                device_map="auto",
+            )
+        else:
+            logger.info("CPU detectada — cargando con low_cpu_mem_usage")
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_path,
+                torch_dtype=torch.float32,
+                low_cpu_mem_usage=True,
+                device_map="cpu",
+            )
+
         self.pipe = pipeline(
             "text-generation",
             model=self.model,
             tokenizer=self.tokenizer,
         )
-        logger.info("Model loaded successfully")
+        logger.info("Modelo cargado!")
 
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         if self.pipe is None:
@@ -47,9 +65,10 @@ class LLMModel:
             temperature=config.TEMPERATURE,
             top_p=config.TOP_P,
             do_sample=True,
+            return_full_text=False,
         )
         generated = outputs[0]["generated_text"]
-        # Strip the prompt prefix
-        return generated[len(formatted):].strip()
+        return generated.strip()
+        
 
 llm = LLMModel()
