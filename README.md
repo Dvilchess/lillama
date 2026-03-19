@@ -26,7 +26,7 @@ Pipeline completo: carga del modelo → fine-tuning → deploy, con separación 
 
 ### 1. Clonar y configurar
 ```bash
-git clone https://github.com/TU_USUARIO/tinyllama-finetune
+git clone https://github.com/dvilchess/lillama
 cd tinyllama-finetune
 cp .env.example .env.dev
 ```
